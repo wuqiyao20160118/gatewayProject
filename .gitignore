@@ -1,0 +1,5 @@
+.idea
+logs
+bin
+.DS_Store
+conf/**
