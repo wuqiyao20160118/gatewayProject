@@ -2,17 +2,16 @@ package controller
 
 import (
 	"encoding/json"
-	"github.com/e421083458/golang_common/lib"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"src/gatewayProject/dao"
 	"src/gatewayProject/dto"
+	"src/gatewayProject/golang_common/lib"
 	"src/gatewayProject/middleware"
 	"src/gatewayProject/public"
 )
 
 type AdminController struct {
-
 }
 
 func AdminRegister(group *gin.RouterGroup) {
@@ -20,7 +19,6 @@ func AdminRegister(group *gin.RouterGroup) {
 	group.GET("/admin_info", admin.AdminInfo)
 	group.POST("/change_pwd", admin.ChangePwd)
 }
-
 
 // AdminInfo godoc
 // @Summary Admin Information
@@ -37,8 +35,8 @@ func (admin *AdminController) AdminInfo(ctx *gin.Context) {
 
 	// Step 1
 	sess := sessions.Default(ctx)
-	sessInfo := sess.Get(public.AdminSessionInfoKey)  // return an interface
-	sessionInfoStr := sessInfo.(string)  // or use fmt.Sprint(sessInfo)
+	sessInfo := sess.Get(public.AdminSessionInfoKey) // return an interface
+	sessionInfoStr := sessInfo.(string)              // or use fmt.Sprint(sessInfo)
 	adminSessionInfo := &dto.AdminSessionInfo{}
 	// unmarshal the json data
 	if err := json.Unmarshal([]byte(sessionInfoStr), adminSessionInfo); err != nil {
@@ -48,12 +46,12 @@ func (admin *AdminController) AdminInfo(ctx *gin.Context) {
 
 	// Step 2
 	out := &dto.AdminInfoOutput{
-		ID: adminSessionInfo.ID,
-		Name: adminSessionInfo.UserName,
-		LoginTime: adminSessionInfo.LoginTime,
-		Avatar: "https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif",
+		ID:           adminSessionInfo.ID,
+		Name:         adminSessionInfo.UserName,
+		LoginTime:    adminSessionInfo.LoginTime,
+		Avatar:       "https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif",
 		Introduction: "Default administrator",
-		Roles: []string{"admin"},
+		Roles:        []string{"admin"},
 	}
 
 	middleware.ResponseSuccess(ctx, out)
@@ -83,7 +81,7 @@ func (admin *AdminController) ChangePwd(ctx *gin.Context) {
 	// Step 1
 	sess := sessions.Default(ctx)
 	sessInfo := sess.Get(public.AdminSessionInfoKey)
-	sessionInfoStr := sessInfo.(string)  // or use fmt.Sprint(sessInfo)
+	sessionInfoStr := sessInfo.(string) // or use fmt.Sprint(sessInfo)
 	adminSessionInfo := &dto.AdminSessionInfo{}
 	// unmarshal the json data
 	if err := json.Unmarshal([]byte(sessionInfoStr), adminSessionInfo); err != nil {
@@ -92,7 +90,7 @@ func (admin *AdminController) ChangePwd(ctx *gin.Context) {
 	}
 
 	// Step 2
-	tx, err := lib.GetGormPool("default")  // 使用配置文件中default的数据库连接池
+	tx, err := lib.GetGormPool("default") // 使用配置文件中default的数据库连接池
 	if err != nil {
 		middleware.ResponseError(ctx, 2001, err)
 		return

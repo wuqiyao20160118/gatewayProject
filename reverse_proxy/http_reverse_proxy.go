@@ -11,11 +11,14 @@ import (
 )
 
 func NewLoadBalanceReverseProxy(c *gin.Context, lb load_balance.LoadBalance, trans *http.Transport) *httputil.ReverseProxy {
-	//请求协调者
+	// 请求协调者 Director
+	// Director must be a function which modifies the request into a new request to be sent using Transport.
+	// Its response is then copied back to the original client unmodified.
+	// Director must not access the provided Request after returning.
 	director := func(req *http.Request) {
 		nextAddr, err := lb.Get(req.URL.String())
 		//todo 优化点3
-		if err != nil || nextAddr=="" {
+		if err != nil || nextAddr == "" {
 			panic("get next addr fail")
 		}
 		target, err := url.Parse(nextAddr)
@@ -37,7 +40,12 @@ func NewLoadBalanceReverseProxy(c *gin.Context, lb load_balance.LoadBalance, tra
 		}
 	}
 
-	//更改内容
+	// 更改内容 ModifyResponse
+	// ModifyResponse is an optional function that modifies the Response from the backend.
+	// It is called if the backend returns a response at all, with any HTTP status code.
+	// If the backend is unreachable, the optional ErrorHandler is called without any call to ModifyResponse.
+	// If ModifyResponse returns an error, ErrorHandler is called with its error value.
+	// If ErrorHandler is nil, its default implementation is used.
 	modifyFunc := func(resp *http.Response) error {
 		if strings.Contains(resp.Header.Get("Connection"), "Upgrade") {
 			return nil
@@ -69,10 +77,10 @@ func NewLoadBalanceReverseProxy(c *gin.Context, lb load_balance.LoadBalance, tra
 		return nil
 	}
 
-	//错误回调 ：关闭real_server时测试，错误回调
-	//范围：transport.RoundTrip发生的错误、以及ModifyResponse发生的错误
+	// 错误回调 ：关闭real_server时测试，错误回调
+	// 范围：transport.RoundTrip发生的错误、以及ModifyResponse发生的错误
 	errFunc := func(w http.ResponseWriter, r *http.Request, err error) {
-		middleware.ResponseError(c,999,err)
+		middleware.ResponseError(c, 999, err)
 	}
 	return &httputil.ReverseProxy{Director: director, ModifyResponse: modifyFunc, ErrorHandler: errFunc}
 }

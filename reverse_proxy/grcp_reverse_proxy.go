@@ -2,11 +2,11 @@ package reverse_proxy
 
 import (
 	"context"
-	"github.com/e421083458/go_gateway/reverse_proxy/load_balance"
 	"github.com/e421083458/grpc-proxy/proxy"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"log"
+	"src/gatewayProject/reverse_proxy/load_balance"
 )
 
 func NewGrpcLoadBalanceHandler(lb load_balance.LoadBalance) grpc.StreamHandler {

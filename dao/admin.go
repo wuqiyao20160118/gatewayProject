@@ -1,11 +1,11 @@
 package dao
 
 import (
+	"github.com/e421083458/gorm"
+	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"src/gatewayProject/dto"
 	"src/gatewayProject/public"
-	"github.com/e421083458/gorm"
-	"github.com/gin-gonic/gin"
 	"time"
 )
 
@@ -32,7 +32,7 @@ import (
 		}
 		return area, nil
 	}
- */
+*/
 
 type Admin struct {
 	Id        int       `json:"id" gorm:"primary_key" description:"primary key"`

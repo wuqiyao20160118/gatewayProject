@@ -1,18 +1,17 @@
 package controller
 
 import (
-	"github.com/e421083458/golang_common/lib"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"src/gatewayProject/dao"
 	"src/gatewayProject/dto"
+	"src/gatewayProject/golang_common/lib"
 	"src/gatewayProject/middleware"
 	"src/gatewayProject/public"
 	"time"
 )
 
 type APPController struct {
-
 }
 
 func APPRegister(group *gin.RouterGroup) {
@@ -45,7 +44,7 @@ func (app *APPController) APPList(c *gin.Context) {
 	}
 
 	appInfo := &dao.App{}
-	tx, err := lib.GetGormPool("default")  // 使用配置文件中default的数据库连接池
+	tx, err := lib.GetGormPool("default") // 使用配置文件中default的数据库连接池
 	if err != nil {
 		middleware.ResponseError(c, 2001, err)
 		return
@@ -73,15 +72,15 @@ func (app *APPController) APPList(c *gin.Context) {
 			WhiteIPS: listItem.WhiteIPS,
 			Qpd:      listItem.Qpd,
 			Qps:      listItem.Qps,
-			RealQpd:  0,            //appCounter.TotalCount,
-			RealQps:  0,            //appCounter.QPS,
+			RealQpd:  0, //appCounter.TotalCount,
+			RealQps:  0, //appCounter.QPS,
 		}
 		outList = append(outList, outItem)
 	}
 
 	out := &dto.APPListOutput{
 		Total: total,
-		List: outList,
+		List:  outList,
 	}
 
 	middleware.ResponseSuccess(c, out)
@@ -310,7 +309,7 @@ func (app *APPController) APPStat(c *gin.Context) {
 	}
 
 	var todayList []int64
-	currentTime:= time.Now()
+	currentTime := time.Now()
 	for i := 0; i <= currentTime.Hour(); i++ {
 		//dateTime := time.Date(currentTime.Year(),currentTime.Month(),currentTime.Day(),i,0,0,0,lib.TimeLocation)
 		//hourData,_:=counter.GetHourData(dateTime)

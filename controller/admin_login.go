@@ -2,18 +2,17 @@ package controller
 
 import (
 	"encoding/json"
-	"github.com/e421083458/golang_common/lib"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"src/gatewayProject/dao"
 	"src/gatewayProject/dto"
+	"src/gatewayProject/golang_common/lib"
 	"src/gatewayProject/middleware"
 	"src/gatewayProject/public"
 	"time"
 )
 
 type AdminLoginController struct {
-
 }
 
 /*
@@ -45,7 +44,7 @@ type AdminLoginController struct {
 		middleware.ResponseSuccess(c, params)
 		return
 	}
- */
+*/
 
 func AdminLoginRegister(group *gin.RouterGroup) {
 	adminLogin := &AdminLoginController{}
@@ -92,8 +91,8 @@ func (adminLogin *AdminLoginController) AdminLogin(ctx *gin.Context) {
 			middleware.ResponseSuccess(c, area)
 			return
 		}
-	 */
-	tx, err := lib.GetGormPool("default")  // 使用配置文件中default的数据库连接池
+	*/
+	tx, err := lib.GetGormPool("default") // 使用配置文件中default的数据库连接池
 	if err != nil {
 		middleware.ResponseError(ctx, 2001, err)
 		return
@@ -107,11 +106,11 @@ func (adminLogin *AdminLoginController) AdminLogin(ctx *gin.Context) {
 
 	// set the user's session
 	sessInfo := &dto.AdminSessionInfo{
-		ID: admin.Id,
-		UserName: admin.UserName,
+		ID:        admin.Id,
+		UserName:  admin.UserName,
 		LoginTime: time.Now(),
 	}
-	sessBts, err := json.Marshal(sessInfo)  // binary stream
+	sessBts, err := json.Marshal(sessInfo) // binary stream
 	if err != nil {
 		middleware.ResponseError(ctx, 2003, err)
 		return

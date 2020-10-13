@@ -1,13 +1,13 @@
 package controller
 
 import (
-	"github.com/e421083458/go_gateway/dao"
-	"github.com/e421083458/go_gateway/dto"
-	"github.com/e421083458/go_gateway/public"
-	"github.com/e421083458/golang_common/lib"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
+	"src/gatewayProject/dao"
+	"src/gatewayProject/dto"
+	"src/gatewayProject/golang_common/lib"
 	"src/gatewayProject/middleware"
+	"src/gatewayProject/public"
 	"time"
 )
 
@@ -47,7 +47,7 @@ func (service *DashboardController) PanelGroupData(c *gin.Context) {
 		middleware.ResponseError(c, 2002, err)
 		return
 	}
-	counter, err := public.FlowCounterHandler.GetCounter(public.FlowTotal)
+	counter, err := public.FlowCounterHandler.GetFlowCounter(public.FlowTotal)
 	if err != nil {
 		middleware.ResponseError(c, 2003, err)
 		return
@@ -109,27 +109,29 @@ func (service *DashboardController) ServiceStat(c *gin.Context) {
 // @Success 200 {object} middleware.Response{data=dto.ServiceStatOutput} "success"
 // @Router /dashboard/flow_stat [get]
 func (service *DashboardController) FlowStat(c *gin.Context) {
-	//counter, err := public.FlowCounterHandler.GetCounter(public.FlowTotal)
-	//if err != nil {
-	//	middleware.ResponseError(c, 2001, err)
-	//	return
-	//}
+	counter, err := public.FlowCounterHandler.GetFlowCounter(public.FlowTotal)
+	if err != nil {
+		middleware.ResponseError(c, 2001, err)
+		return
+	}
 	var todayList []int64
 	currentTime := time.Now()
 	for i := 0; i <= currentTime.Hour(); i++ {
-		//dateTime := time.Date(currentTime.Year(), currentTime.Month(), currentTime.Day(), i, 0, 0, 0, lib.TimeLocation)
-		//hourData, _ := counter.GetHourData(dateTime)
-		//todayList = append(todayList, hourData)
-		todayList = append(todayList, 0)
+		dateTime := time.Date(currentTime.Year(),
+			currentTime.Month(),
+			currentTime.Day(), i, 0, 0, 0, lib.TimeLocation)
+		hourData, _ := counter.GetHourData(dateTime)
+		todayList = append(todayList, hourData)
 	}
 
 	var yesterdayList []int64
-	//yesterTime := currentTime.Add(-1 * time.Duration(time.Hour*24))
+	yesterTime := currentTime.Add(-1 * time.Duration(time.Hour*24))
 	for i := 0; i <= 23; i++ {
-		//dateTime := time.Date(yesterTime.Year(), yesterTime.Month(), yesterTime.Day(), i, 0, 0, 0, lib.TimeLocation)
-		//hourData, _ := counter.GetHourData(dateTime)
-		//yesterdayList = append(yesterdayList, hourData)
-		yesterdayList = append(yesterdayList, 0)
+		dateTime := time.Date(yesterTime.Year(),
+			yesterTime.Month(),
+			yesterTime.Day(), i, 0, 0, 0, lib.TimeLocation)
+		hourData, _ := counter.GetHourData(dateTime)
+		yesterdayList = append(yesterdayList, hourData)
 	}
 	middleware.ResponseSuccess(c, &dto.ServiceStatOutput{
 		Today:     todayList,

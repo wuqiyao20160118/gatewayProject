@@ -25,7 +25,7 @@ func DefaultGetValidParams(c *gin.Context, params interface{}) error {
 	err = valid.Struct(params)
 	if err != nil {
 		errs := err.(validator.ValidationErrors)
-		sliceErrs := []string{}
+		var sliceErrs []string
 		for _, e := range errs {
 			sliceErrs = append(sliceErrs, e.Translate(trans))
 		}

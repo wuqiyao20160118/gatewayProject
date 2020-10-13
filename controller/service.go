@@ -2,11 +2,11 @@ package controller
 
 import (
 	"fmt"
-	"github.com/e421083458/golang_common/lib"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"src/gatewayProject/dao"
 	"src/gatewayProject/dto"
+	"src/gatewayProject/golang_common/lib"
 	"src/gatewayProject/middleware"
 	"src/gatewayProject/public"
 	"strings"
@@ -14,7 +14,6 @@ import (
 )
 
 type ServiceController struct {
-
 }
 
 func ServiceRegister(group *gin.RouterGroup) {
@@ -52,7 +51,7 @@ func (service *ServiceController) ServiceList(c *gin.Context) {
 	}
 
 	serviceInfo := &dao.ServiceInfo{}
-	tx, err := lib.GetGormPool("default")  // 使用配置文件中default的数据库连接池
+	tx, err := lib.GetGormPool("default") // 使用配置文件中default的数据库连接池
 	if err != nil {
 		middleware.ResponseError(c, 2001, err)
 		return
@@ -102,22 +101,28 @@ func (service *ServiceController) ServiceList(c *gin.Context) {
 
 		ipList := serviceDetail.LoadBalance.GetIPListByModel()
 
+		serviceCounter, err := public.FlowCounterHandler.GetFlowCounter(public.FlowServicePrefix + listItem.ServiceName)
+		if err != nil {
+			middleware.ResponseError(c, 2004, err)
+			return
+		}
+
 		outItem := dto.ServiceListItemOutput{
 			ID:          listItem.ID,
 			LoadType:    listItem.LoadType,
 			ServiceName: listItem.ServiceName,
 			ServiceDesc: listItem.ServiceDesc,
 			ServiceAddr: serviceAddr,
-			Qps: 0,
-			Qpd: 0,
-			TotalNode: len(ipList),
+			Qps:         serviceCounter.QPS,
+			Qpd:         serviceCounter.TotalCount,
+			TotalNode:   len(ipList),
 		}
 		outList = append(outList, outItem)
 	}
 
 	out := &dto.ServiceListOutput{
 		Total: total,
-		List: outList,
+		List:  outList,
 	}
 
 	middleware.ResponseSuccess(c, out)
@@ -199,7 +204,6 @@ func (service *ServiceController) ServiceDetail(c *gin.Context) {
 	}
 	middleware.ResponseSuccess(c, serviceDetail)
 }
-
 
 // ServiceAddHTTP godoc
 // @Summary Add HTTP Service
@@ -405,7 +409,6 @@ func (service *ServiceController) ServiceUpdateHTTP(c *gin.Context) {
 	middleware.ResponseSuccess(c, "")
 }
 
-
 // ServiceStat godoc
 // @Summary ServiceStat
 // @Description ServiceStat
@@ -437,22 +440,30 @@ func (service *ServiceController) ServiceStat(c *gin.Context) {
 		return
 	}
 
+	counter, err := public.FlowCounterHandler.GetFlowCounter(public.FlowServicePrefix + serviceInfo.ServiceName)
+	if err != nil {
+		middleware.ResponseError(c, 2004, err)
+		return
+	}
+
 	var todayList []int64
-	currentTime:= time.Now()
+	currentTime := time.Now()
 	for i := 0; i <= currentTime.Hour(); i++ {
-		//dateTime := time.Date(currentTime.Year(),currentTime.Month(),currentTime.Day(),i,0,0,0,lib.TimeLocation)
-		//hourData,_:=counter.GetHourData(dateTime)
-		//todayList = append(todayList, hourData)
-		todayList = append(todayList, 0)
+		dateTime := time.Date(currentTime.Year(),
+			currentTime.Month(),
+			currentTime.Day(), i, 0, 0, 0, lib.TimeLocation)
+		hourData, _ := counter.GetHourData(dateTime)
+		todayList = append(todayList, hourData)
 	}
 
 	var yesterdayList []int64
-	//yesterTime:= currentTime.Add(-1*time.Duration(time.Hour*24))
+	yesterTime := currentTime.Add(-1 * time.Duration(time.Hour*24))
 	for i := 0; i <= 23; i++ {
-		//dateTime := time.Date(yesterTime.Year(),yesterTime.Month(),yesterTime.Day(),i,0,0,0,lib.TimeLocation)
-		//hourData,_:=counter.GetHourData(dateTime)
-		//yesterdayList = append(yesterdayList, hourData)
-		yesterdayList = append(yesterdayList, 0)
+		dateTime := time.Date(yesterTime.Year(),
+			yesterTime.Month(),
+			yesterTime.Day(), i, 0, 0, 0, lib.TimeLocation)
+		hourData, _ := counter.GetHourData(dateTime)
+		yesterdayList = append(yesterdayList, hourData)
 	}
 
 	middleware.ResponseSuccess(c, &dto.ServiceStatOutput{

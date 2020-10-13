@@ -1,7 +1,6 @@
 package router
 
 import (
-	"github.com/e421083458/golang_common/lib"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/swaggo/files"
@@ -9,6 +8,7 @@ import (
 	"log"
 	"src/gatewayProject/controller"
 	"src/gatewayProject/docs"
+	"src/gatewayProject/golang_common/lib"
 	"src/gatewayProject/middleware"
 )
 
@@ -95,7 +95,7 @@ func InitRouter(middlewares ...gin.HandlerFunc) *gin.Engine {
 		middleware.RecoveryMiddleware(),
 		middleware.RequestLog(),
 		middleware.TranslationMiddleware(),
-		)
+	)
 	{
 		// register adminLoginRouter to the group
 		controller.AdminLoginRegister(adminLoginRouter)
@@ -103,12 +103,12 @@ func InitRouter(middlewares ...gin.HandlerFunc) *gin.Engine {
 
 	adminRouter := router.Group("/admin")
 	adminRouter.Use(
-			sessions.Sessions("mysession", store),
-			middleware.RecoveryMiddleware(),      // the middleware which catches all panics and returns error messages
-			middleware.RequestLog(),
-			middleware.SessionAuthMiddleware(),   // Authentication middleware
-			middleware.TranslationMiddleware(),
-		)
+		sessions.Sessions("mysession", store),
+		middleware.RecoveryMiddleware(), // the middleware which catches all panics and returns error messages
+		middleware.RequestLog(),
+		middleware.SessionAuthMiddleware(), // Authentication middleware
+		middleware.TranslationMiddleware(),
+	)
 	{
 		controller.AdminRegister(adminRouter)
 	}
@@ -116,9 +116,9 @@ func InitRouter(middlewares ...gin.HandlerFunc) *gin.Engine {
 	serviceRouter := router.Group("/service")
 	serviceRouter.Use(
 		sessions.Sessions("mysession", store),
-		middleware.RecoveryMiddleware(),      // the middleware which catches all panics and returns error messages
+		middleware.RecoveryMiddleware(), // the middleware which catches all panics and returns error messages
 		middleware.RequestLog(),
-		middleware.SessionAuthMiddleware(),   // Authentication middleware
+		middleware.SessionAuthMiddleware(), // Authentication middleware
 		middleware.TranslationMiddleware(),
 	)
 	{
