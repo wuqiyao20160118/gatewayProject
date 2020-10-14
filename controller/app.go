@@ -57,12 +57,12 @@ func (app *APPController) APPList(c *gin.Context) {
 
 	var outList []dto.APPListItemOutput
 	for _, listItem := range list {
-		//appCounter, err := public.FlowCounterHandler.GetCounter(public.FlowAppPrefix + listItem.AppID)
-		//if err != nil {
-		//	middleware.ResponseError(c, 2003, err)
-		//	c.Abort()
-		//	return
-		//}
+		appCounter, err := public.FlowCounterHandler.GetFlowCounter(public.FlowAppPrefix + listItem.AppID)
+		if err != nil {
+			middleware.ResponseError(c, 2003, err)
+			c.Abort()
+			return
+		}
 
 		outItem := dto.APPListItemOutput{
 			ID:       listItem.ID,
@@ -72,8 +72,8 @@ func (app *APPController) APPList(c *gin.Context) {
 			WhiteIPS: listItem.WhiteIPS,
 			Qpd:      listItem.Qpd,
 			Qps:      listItem.Qps,
-			RealQpd:  0, //appCounter.TotalCount,
-			RealQps:  0, //appCounter.QPS,
+			RealQpd:  appCounter.TotalCount,
+			RealQps:  appCounter.QPS,
 		}
 		outList = append(outList, outItem)
 	}
@@ -308,22 +308,31 @@ func (app *APPController) APPStat(c *gin.Context) {
 		return
 	}
 
+	counter, err := public.FlowCounterHandler.GetFlowCounter(public.FlowAppPrefix + detail.AppID)
+	if err != nil {
+		middleware.ResponseError(c, 2003, err)
+		c.Abort()
+		return
+	}
+
 	var todayList []int64
 	currentTime := time.Now()
 	for i := 0; i <= currentTime.Hour(); i++ {
-		//dateTime := time.Date(currentTime.Year(),currentTime.Month(),currentTime.Day(),i,0,0,0,lib.TimeLocation)
-		//hourData,_:=counter.GetHourData(dateTime)
-		//todayList = append(todayList, hourData)
-		todayList = append(todayList, 0)
+		dateTime := time.Date(currentTime.Year(),
+			currentTime.Month(),
+			currentTime.Day(), i, 0, 0, 0, lib.TimeLocation)
+		hourData, _ := counter.GetHourData(dateTime)
+		todayList = append(todayList, hourData)
 	}
 
 	var yesterdayList []int64
-	//yesterTime:= currentTime.Add(-1*time.Duration(time.Hour*24))
+	yesterTime := currentTime.Add(-1 * time.Duration(time.Hour*24))
 	for i := 0; i <= 23; i++ {
-		//dateTime := time.Date(yesterTime.Year(),yesterTime.Month(),yesterTime.Day(),i,0,0,0,lib.TimeLocation)
-		//hourData,_:=counter.GetHourData(dateTime)
-		//yesterdayList = append(yesterdayList, hourData)
-		yesterdayList = append(yesterdayList, 0)
+		dateTime := time.Date(yesterTime.Year(),
+			yesterTime.Month(),
+			yesterTime.Day(), i, 0, 0, 0, lib.TimeLocation)
+		hourData, _ := counter.GetHourData(dateTime)
+		yesterdayList = append(yesterdayList, hourData)
 	}
 
 	middleware.ResponseSuccess(c, &dto.StatisticsOutput{

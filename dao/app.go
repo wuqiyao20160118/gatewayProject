@@ -3,8 +3,11 @@ package dao
 import (
 	"github.com/e421083458/gorm"
 	"github.com/gin-gonic/gin"
+	"net/http/httptest"
 	"src/gatewayProject/dto"
+	"src/gatewayProject/golang_common/lib"
 	"src/gatewayProject/public"
+	"sync"
 	"time"
 )
 
@@ -30,8 +33,8 @@ func (t *App) APPList(c *gin.Context, tx *gorm.DB, param *dto.APPListInput) ([]A
 	var list []App
 	offset := (param.PageNo - 1) * param.PageSize
 
-	query := tx.SetCtx(public.GetGinTraceContext(c))  // 控制台可以打印数据库查询
-	query = query.Table(t.TableName()).Where("is_delete=0")  // 这里需要知道表的字段，故需要query.Table()
+	query := tx.SetCtx(public.GetGinTraceContext(c))        // 控制台可以打印数据库查询
+	query = query.Table(t.TableName()).Where("is_delete=0") // 这里需要知道表的字段，故需要query.Table()
 	if param.Info != "" {
 		query = query.Where("(app_id like ? or name like ?)", "%"+param.Info+"%", "%"+param.Info+"%")
 	}
@@ -60,4 +63,68 @@ func (t *App) Find(c *gin.Context, tx *gorm.DB, search *App) (*App, error) {
 
 func (t *App) Save(c *gin.Context, tx *gorm.DB) error {
 	return tx.SetCtx(public.GetGinTraceContext(c)).Save(t).Error
+}
+
+// 暴露给外部使用
+var AppManagerHandler *AppManager
+
+// 初始化时直接调用init()，进而直接执行构造函数NewServiceManager()，实现了单例模式
+func init() {
+	AppManagerHandler = NewAppManager()
+}
+
+type AppManager struct {
+	AppMap   map[string]*App
+	AppSlice []*App
+	Locker   sync.RWMutex
+	init     sync.Once
+	err      error
+}
+
+func NewAppManager() *AppManager {
+	return &AppManager{
+		AppMap:   map[string]*App{},
+		AppSlice: []*App{},
+		Locker:   sync.RWMutex{},
+		init:     sync.Once{},
+	}
+}
+
+func (app *AppManager) LoadOnce() error {
+	app.init.Do(func() {
+		appInfo := &App{}
+
+		c, _ := gin.CreateTestContext(httptest.NewRecorder())
+
+		tx, err := lib.GetGormPool("default")
+		if err != nil {
+			app.err = err
+			return
+		}
+
+		params := &dto.APPListInput{PageNo: 1, PageSize: 99999}
+		list, _, err := appInfo.APPList(c, tx, params)
+		if err != nil {
+			app.err = err
+			return
+		}
+
+		// 需要加锁进行map的修改操作
+		app.Locker.Lock()
+		defer app.Locker.Unlock()
+		for _, listItem := range list {
+			// 注意！listItem是指针类型，直接循环查询会被ServiceDetail修改 (方法中使用到了赋值)
+			// 需要进行拷贝操作
+			tmpItem := listItem
+			// 存入map以及slice
+			app.AppMap[listItem.AppID] = &tmpItem
+			app.AppSlice = append(app.AppSlice, &tmpItem)
+		}
+	})
+
+	return app.err
+}
+
+func (app *AppManager) GetAppList() []*App {
+	return app.AppSlice
 }

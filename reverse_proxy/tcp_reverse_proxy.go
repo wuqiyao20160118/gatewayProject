@@ -2,11 +2,11 @@ package reverse_proxy
 
 import (
 	"context"
-	"github.com/e421083458/go_gateway/tcp_proxy_middleware"
 	"io"
 	"log"
 	"net"
 	"src/gatewayProject/reverse_proxy/load_balance"
+	"src/gatewayProject/tcp_proxy_middleware"
 	"time"
 )
 
@@ -25,7 +25,7 @@ func NewTcpLoadBalanceReverseProxy(c *tcp_proxy_middleware.TcpSliceRouterContext
 	}()
 }
 
-//TCP反向代理
+// TCP反向代理
 type TcpReverseProxy struct {
 	ctx                  context.Context //单次请求单独设置
 	Addr                 string
@@ -62,9 +62,9 @@ func (dp *TcpReverseProxy) keepAlivePeriod() time.Duration {
 	return time.Minute
 }
 
-//传入上游 conn，在这里完成下游连接与数据交换
+// 传入上游 conn，在这里完成下游连接与数据交换
 func (dp *TcpReverseProxy) ServeTCP(ctx context.Context, src net.Conn) {
-	//设置连接超时
+	// 设置连接超时
 	var cancel context.CancelFunc
 	if dp.DialTimeout >= 0 {
 		ctx, cancel = context.WithTimeout(ctx, dp.dialTimeout())
@@ -80,7 +80,7 @@ func (dp *TcpReverseProxy) ServeTCP(ctx context.Context, src net.Conn) {
 
 	defer func() { go dst.Close() }() //记得退出下游连接
 
-	//设置dst的 keepAlive 参数,在数据请求之前
+	// 设置dst的 keepAlive 参数,在数据请求之前
 	if ka := dp.keepAlivePeriod(); ka > 0 {
 		if c, ok := dst.(*net.TCPConn); ok {
 			c.SetKeepAlive(true)
